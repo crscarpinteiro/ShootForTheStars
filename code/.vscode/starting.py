@@ -6,7 +6,7 @@ from collections import OrderedDict
 from astropy.table import Table
 
 
-obj1 = Table.read('plasticc-kit/data/fake010.csv', format='csv')
+obj1 = Table.read('data/fake010.csv', format='csv')
 print(obj1)
 
 class LightCurve(object):
@@ -134,13 +134,13 @@ class LightCurve(object):
         return feats
 
 
-# lc = LightCurve('plasticc-kit/data/fake010.csv')
+# lc = LightCurve('data/fake010.csv')
 # lc.plot_multicolor_lc()
-# lc = LightCurve('plasticc-kit/data/fake030.csv')
+# lc = LightCurve('data/fake030.csv')
 # lc.plot_multicolor_lc()
 
-# from gatspy.periodic import LombScargleMultiband
-# model = LombScargleMultiband(fit_period=True)
+from gatspy.periodic import LombScargleMultiband
+# model = LombScargleMultiband(fit_periodic=True)
 
 # # we'll window the search range by setting minimums and maximums here
 # # but in general, the search range you want to evaluate will depend on the data
