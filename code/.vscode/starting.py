@@ -4,9 +4,9 @@ import scipy.stats as spstat
 import matplotlib.pyplot as plt
 from collections import OrderedDict
 from astropy.table import Table
+from gatspy.periodic import LombScargleMultiband
 
-
-obj1 = Table.read('data/fake010.csv', format='csv')
+obj1 = Table.read('.vscode/data/fake010.csv', format='csv')
 print(obj1)
 
 class LightCurve(object):
@@ -134,29 +134,27 @@ class LightCurve(object):
         return feats
 
 
-# lc = LightCurve('data/fake010.csv')
-# lc.plot_multicolor_lc()
-# lc = LightCurve('data/fake030.csv')
-# lc.plot_multicolor_lc()
+lc = LightCurve('.vscode/data/fake010.csv')
+lc.plot_multicolor_lc()
+lc = LightCurve('.vscode/data/fake030.csv')
+lc.plot_multicolor_lc()
 
-from gatspy.periodic import LombScargleMultiband
-# model = LombScargleMultiband(fit_periodic=True)
+model = LombScargleMultiband(fit_period=True)
+# we'll window the search range by setting minimums and maximums here
+# but in general, the search range you want to evaluate will depend on the data
+# and you will not be able to window like this unless you know something about
+# the class of the object a priori
+t_min = max(np.median(np.diff(sorted(lc.DFlc['mjd']))), 0.1)
+t_max = min(10., (lc.DFlc['mjd'].max() - lc.DFlc['mjd'].min())/2.)
 
-# # we'll window the search range by setting minimums and maximums here
-# # but in general, the search range you want to evaluate will depend on the data
-# # and you will not be able to window like this unless you know something about
-# # the class of the object a priori
-# t_min = max(np.median(np.diff(sorted(lc.DFlc['mjd']))), 0.1)
-# t_max = min(10., (lc.DFlc['mjd'].max() - lc.DFlc['mjd'].min())/2.)
+model.optimizer.set(period_range=(t_min, t_max), first_pass_coverage=5)
+model.fit(lc.DFlc['mjd'], lc.DFlc['flux'], dy=lc.DFlc['flux_err'], filts=lc.DFlc['passband'])
+period = model.best_period
+print(f'{lc.filename} has a period of {period} days')
 
-# model.optimizer.set(period_range=(t_min, t_max), first_pass_coverage=5)
-# model.fit(lc.DFlc['mjd'], lc.DFlc['flux'], dy=lc.DFlc['flux_err'], filts=lc.DFlc['passband'])
-# period = model.best_period
-# print(f'{lc.filename} has a period of {period} days')
-
-# phase = (lc.DFlc['mjd'] /period) % 1
-# lc.plot_multicolor_lc(phase=phase)
-# header = Table.read('plasticc-kit/data/plasticc_training_set_metadata_stub.csv', format='csv')
-# header
+phase = (lc.DFlc['mjd'] /period) % 1
+lc.plot_multicolor_lc(phase=phase)
+header = Table.read('.vscode/data/plasticc_training_set_metadata_stub.csv', format='csv')
+header
 
 
