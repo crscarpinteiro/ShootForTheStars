@@ -6,7 +6,7 @@ from collections import OrderedDict
 from astropy.table import Table
 from gatspy.periodic import LombScargleMultiband
 
-obj1 = Table.read('.vscode/data/fake010.csv', format='csv')
+obj1 = Table.read('data/fake010.csv', format='csv')
 print(obj1)
 
 class LightCurve(object):
@@ -134,9 +134,9 @@ class LightCurve(object):
         return feats
 
 
-lc = LightCurve('.vscode/data/fake010.csv')
+lc = LightCurve('data/fake010.csv')
 lc.plot_multicolor_lc()
-lc = LightCurve('.vscode/data/fake030.csv')
+lc = LightCurve('data/fake030.csv')
 lc.plot_multicolor_lc()
 
 model = LombScargleMultiband(fit_period=True)
@@ -154,7 +154,5 @@ print(f'{lc.filename} has a period of {period} days')
 
 phase = (lc.DFlc['mjd'] /period) % 1
 lc.plot_multicolor_lc(phase=phase)
-header = Table.read('.vscode/data/plasticc_training_set_metadata_stub.csv', format='csv')
+header = Table.read('data/plasticc_training_set_metadata_stub.csv', format='csv')
 header
-
-
