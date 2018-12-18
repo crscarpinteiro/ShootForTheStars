@@ -143,11 +143,27 @@ features_to_use = ["all_times_nhist_numpeaks",
                   "p2p_ssqr_diff_over_var",
                   "scatter_res_raw"]
 
+#Open Things
+#Your Directories here :)
+t = open("mariana/times_with_interp.pickle", 'rb')
+space_times = pickle.load(t)
+t.close()
+
+#Your Directories here :)
+m = open("mariana/measures_with_interp.pickle", 'rb')
+space_measurements = pickle.load(m)
+m.close()
+
+space_meta_features = np.load('meta.npy')
+
+print(len(space_times))
+print(len(space_measurements))
+print(len(space_meta_features))
+
 #space_times = np.load("st.npy")
 #space_measurements = np.load('meas.npy')
 #space_meta_features = np.load('meta.npy')
-print(len(space_times))
-
+#print(len(space_times))
 #space_times.tolist()
 #space_measurements.tolist()
 space_meta_features.tolist()
