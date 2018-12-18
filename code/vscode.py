@@ -154,12 +154,24 @@ m = open("mariana/measures_with_interp.pickle", 'rb')
 space_measurements = pickle.load(m)
 m.close()
 
+#Load meta_features from here
 space_meta_features = np.load('meta.npy')
 
 print(len(space_times))
 print(len(space_measurements))
 print(len(space_meta_features))
 
+#Create lists for cesium.featurize
+st = []
+meas = []
+for key in space_times:
+    st.append(space_times[key])
+    meas.append(space_measurements[key])
+
+print(len(st))
+print(len(meas))
+
+#If possible to load these numpy arrays is better; otherwise just comment this.
 #space_times = np.load("st.npy")
 #space_measurements = np.load('meas.npy')
 #space_meta_features = np.load('meta.npy')
@@ -168,12 +180,12 @@ print(len(space_meta_features))
 #space_measurements.tolist()
 space_meta_features.tolist()
 
-print(len(space_times))
+#print(len(st)
 
 features_interp = []
 for index in range(len(space_meta_features)):
     print(index)
-    fset = featurize.featurize_time_series(times=space_times[index], values=space_measurements[index], errors=None, features_to_use=features_to_use, meta_features=space_meta_features[index])
+    fset = featurize.featurize_time_series(times=st[index], values=meas[index], errors=None, features_to_use=features_to_use, meta_features=space_meta_features[index])
     features_interp.append(fset)
     
 print(len(features_interp))
