@@ -48,63 +48,30 @@ import pprint
 import sys
 from sklearn.metrics import confusion_matrix
 import itertools
-from sklearn.preprocessing import StandardScaler
 
-filename = 'training_set_metadata.csv'
+filename ='C:\\Users\\Cristiana\\Documents\\GitHub\\ShootForTheStars\\code\\training_set_metadata.csv'
 meta_training = Table.read(filename, format='ascii.csv')
 n_objects = len(meta_training)
 target_vec = np.asarray(meta_training['target'])
 
-unique_targets = np.unique(target_vec)
-print("There are {} unique targets.".format(len(unique_targets)))
-print(unique_targets)
 
-hist_count = np.zeros([len(unique_targets), 1])
-for i in range(1, len(unique_targets)):
-    hist_count[i, 0] = np.count_nonzero(target_vec[target_vec == unique_targets[i]])
-
-print('Number of objects of each class')
-print(hist_count.ravel())
-
-plt.rcdefaults()
-objects = ('6', '15', '16', '42', '52', '53', '62', '64', '65', '67', '88', '90', '92', '95')
-y_pos = np.arange(len(objects))
-performance = hist_count.ravel()
-
-plt.bar(y_pos, performance, align='center', alpha=0.5)
-plt.xticks(y_pos, objects)
-plt.ylabel('Amount')
-plt.xlabel('Object class')
-plt.title('Number of objects from each class')
-plt.show()
-
-counts = Counter(meta_training['target'])
-labels, values = zip(*sorted(counts.items(), key=itemgetter(1)))
-
-#  binarize target_vec  relative to most frequent label
-max_label = labels[np.argmax(values)]
-bool_labels = target_vec == max_label
-bin_labels = bool_labels.astype(int)
-features = np.ones(len(bin_labels))
-
-# Read npy arrays
-feature_set_file = open('feature_set.npy', 'rb')
+# Read npy array of features
+feature_set_file = open('C:\\Users\\Cristiana\\Documents\\GitHub\\ShootForTheStars\\code\\feature_set.npy', 'rb')
 features = np.load(feature_set_file)
 pprint.pprint(features)
 plt.plot(features[:, 1])
 
-x_train, x_test, y_train, y_test = train_test_split(features, bin_labels, test_size=0.2, random_state=0)
+x_train, x_test, y_train, y_test = train_test_split(features, target_vec, test_size=0.2, random_state=0)
 
-scaler=StandardScaler().fit(x_train)
-x_train=scaler.transform(x_train)
 # pca = PCA(n_components='mle', whiten=True, svd_solver="full", random_state=42)
 # x_train_pca = pca.fit_transform(x_train)
 
 
 def svm_classifier(x_train, y_train):
-    svm_parameters = {'kernel': ['rbf'], 'gamma': [
-        0.01, 0.5, 1, 10], 'C': [0.01, 0.5, 1, 10, 100]}
-    grid_svm = RandomizedSearchCV(svm.SVC(decision_function_shape='ovr'), svm_parameters,
+    svm_parameters = { 'C': [0.01, 0.5, 1, 10, 100]}
+    grid_svm = RandomizedSearchCV(svm.LinearSVC(class_weight=None, dual=True, fit_intercept=True,
+     intercept_scaling=1, loss='squared_hinge', max_iter=1000,
+     multi_class='ovr', penalty='l2', random_state=0, tol=1e-05, verbose=0),svm_parameters,
                                   scoring='accuracy', cv=5, n_jobs=-1, verbose=3)
 
     grid_svm.fit(x_train, y_train)
@@ -176,32 +143,31 @@ def BDT_classifier(x_train, y_train):
 
     return bdt_score, bdt_classifier
 
-
-x_test = scaler.transform(x_test)
-gnb_score, classifier = bayes_classifier(x_train, y_train)
-y_pred = classifier.predict(x_test)
-acc = accuracy_score(y_test, y_pred)
-print('cross val GNB', gnb_score, 'test GNB:', acc)
+#
+# gnb_score, classifier = bayes_classifier(x_train, y_train)
+# y_pred = classifier.predict(x_test)
+# acc = accuracy_score(y_test, y_pred)
+# print('cross val GNB', gnb_score, 'test GNB:', acc)
 
 svm_score, classifier = svm_classifier(x_train, y_train)
 y_pred = classifier.predict(x_test)
 acc = accuracy_score(y_test, y_pred)
 print('cross val svm', svm_score, 'test svm:', acc)
 
-knn_score, classifier = knn_classifier(x_train, y_train)
-y_pred = classifier.predict(x_test)
-acc = accuracy_score(y_test, y_pred)
-print('cross val knn', knn_score,'test knn:', acc)
-
-nn_score, classifier = neural_classifier(x_train, y_train)
-y_pred = classifier.predict(x_test)
-acc = accuracy_score(y_test, y_pred)
-print('cross val nn', nn_score, 'test nn:', acc)
-
-bdt_score, classifier = BDT_classifier(x_train, y_train)
-y_pred = classifier.predict(x_test)
-acc = accuracy_score(y_test, y_pred)
-print('cross val bdt', bdt_score, 'test bdt:', acc)
+# knn_score, classifier = knn_classifier(x_train, y_train)
+# y_pred = classifier.predict(x_test)
+# acc = accuracy_score(y_test, y_pred)
+# print('cross val knn', knn_score,'test knn:', acc)
+#
+# nn_score, classifier = neural_classifier(x_train, y_train)
+# y_pred = classifier.predict(x_test)
+# acc = accuracy_score(y_test, y_pred)
+# print('cross val nn', nn_score, 'test nn:', acc)
+#
+# bdt_score, classifier = BDT_classifier(x_train, y_train)
+# y_pred = classifier.predict(x_test)
+# acc = accuracy_score(y_test, y_pred)
+# print('cross val bdt', bdt_score, 'test bdt:', acc)
 
 tn, fp, fn, tp = confusion_matrix(y_test, y_pred).ravel()
 def plot_confusion_matrix(cm, classes,
@@ -241,11 +207,12 @@ def plot_confusion_matrix(cm, classes,
 
 # Compute confusion matrix
 cnf_matrix = confusion_matrix(y_test, y_pred)
-np.set_printoptions(precision=2)
-class_names=np.array(['0', '1'])
+np.set_printoptions(precision=13)
+class_names=np.array(['0', '1','2', '3', '4', '5', '6','7','8','9', '10', '11', '12', '13'])
 # Plot non-normalized confusion matrix
 plt.figure()
-plot_confusion_matrix(cnf_matrix, classes=class_names,normalize=True,
+plot_confusion_matrix(cnf_matrix, classes=class_names, normalize=True,
                       title='Confusion matrix, with normalization')
+
 
 plt.show()
