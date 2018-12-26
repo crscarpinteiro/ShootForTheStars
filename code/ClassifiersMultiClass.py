@@ -63,8 +63,6 @@ plt.plot(features[:, 1])
 
 x_train, x_test, y_train, y_test = train_test_split(features, target_vec, test_size=0.2, random_state=0)
 
-# pca = PCA(n_components='mle', whiten=True, svd_solver="full", random_state=42)
-# x_train_pca = pca.fit_transform(x_train)
 
 
 def svm_classifier(x_train, y_train):
@@ -169,7 +167,6 @@ print('cross val svm', svm_score, 'test svm:', acc)
 # acc = accuracy_score(y_test, y_pred)
 # print('cross val bdt', bdt_score, 'test bdt:', acc)
 
-tn, fp, fn, tp = confusion_matrix(y_test, y_pred).ravel()
 def plot_confusion_matrix(cm, classes,
                           normalize=False,
                           title='Confusion matrix',

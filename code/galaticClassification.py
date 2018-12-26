@@ -229,10 +229,10 @@ clfs = []
 scores = []
 
 # FIND BEST PARAMETERS
-for i in range(1000):
+for i in range(150):
     params = {
         'objective': 'multiclass',
-        'boosting_type': choice(['gbdt', 'random_forest', 'dart']),
+        'boosting_type': choice(['gbdt', 'dart']),
         'num_class': 9,
         'metric': 'multi_logloss',
         'subsample': .93,
@@ -245,15 +245,17 @@ for i in range(1000):
         'silent': True,
         'nthread': -1,
         'num_leaves': choice(np.linspace(5, 50, num=10)).astype(int),
-        'n_estimators': choice(np.linspace(1000, 6000, num=100)).astype(int),
+        'n_estimators': choice(np.linspace(2000, 6000, num=100)).astype(int),
         'max_depth': choice(np.linspace(1, 10, num=10)).astype(int),
         'learning_rate': choice(np.linspace(0.001, 0.1, num=100)),
         'min_data_in_leaf': choice(np.linspace(15, 50, num=30)).astype(int),
         'bagging_freq': 10,
-        'bagging_fraction': 0.99
+        'bagging_fraction': 0.99,
+        'n_jobs': -1
 
     }
 
+    print(i)
     this_clf, this_score = lgbm_modeling_cross_validation(params, x_train_extragalactic, y_train_extragalactic.iloc[:, 0],
                                                           nr_fold=5, random_state=1)
     clfs.append(this_clf)
@@ -290,66 +292,83 @@ plot_confusion_matrix(cnf_matrix, classes=class_names, normalize=True,
 plt.show()
 
 # GALACTIC
+x_train_galactic, x_test_galactic, y_train_galactic, y_test_galactic = train_test_split(
+    galactic_features, galactic_target_vec, test_size=0.2, random_state=0)
+# # scalling
+scaler_galactic = StandardScaler().fit(x_train_galactic)
+x_train_galactic = scaler_galactic.transform(x_train_galactic)
+x_train_galactic = pd.DataFrame(data=x_train_galactic)
+clfs_galactic = []
+scores=[]
+for i in range(150):
+    print(i)
+    params = {
+            'objective': 'multiclass',
+            'boosting_type': choice(['gbdt', 'dart']),
+            'num_class': 5,
+            'metric': 'multi_logloss',
+            'subsample': .93,
+            'colsample_bytree': .75,
+            'reg_alpha': .01,
+            'reg_lambda': .01,
+            'min_split_gain': 0.01,
+            'min_child_weight': 10,
+            'verbosity': -1,
+            'silent': True,
+            'nthread': -1,
+            'num_leaves': choice(np.linspace(5, 50, num=10)).astype(int),
+            'n_estimators': choice(np.linspace(2000, 6000, num=100)).astype(int),
+            'max_depth': choice(np.linspace(1, 10, num=10)).astype(int),
+            'learning_rate': choice(np.linspace(0.001, 0.1, num=100)),
+            'min_data_in_leaf': choice(np.linspace(15, 50, num=30)).astype(int),
+            'bagging_freq': 10,
+            'bagging_fraction': 0.99,
+            'n_jobs': -1
 
-# for i in range(10):
-#     params = {
-#         'objective': 'multiclass',
-#         'boosting_type': choice(['gbdt', 'random_forest', 'dart']),
-#         'num_class': 9,
-#         'metric': 'multi_logloss',
-#         'subsample': .93,
-#         'colsample_bytree': .75,
-#         'reg_alpha': .01,
-#         'reg_lambda': .01,
-#         'min_split_gain': 0.01,
-#         'min_child_weight': 10,
-#         'verbosity': -1,
-#         'silent': True,
-#         'is_unbalanced': True,
-#         'nthread': -1,
-#         'num_leaves': choice(np.linspace(5, 50, num=10)).astype(int),
-#         'n_estimators': choice(np.linspace(1000, 6000, num=100)).astype(int),
-#         'max_depth': choice(np.linspace(1, 10, num=10)).astype(int),
-#         'learning_rate': choice(np.linspace(0.001, 0.1, num=100)),
-#         'min_data_in_leaf': choice(np.linspace(15, 50, num=30)).astype(int),
-#         'bagging_freq': 10,
-#         'bagging_fraction': 0.99
-#
-#     }
-#
-#     this_clf, this_score = lgbm_modeling_cross_validation(params, x_train_galactic, y_train_galactic.ix[:, 0],
-#                                                           nr_fold=5, random_state=1)
-#     clfs.append(this_clf)
-#     scores.append(this_score)
-# x_test_galactic = scaler_galactic.transform(x_test_galactic)
-# x_test_galactic = pd.DataFrame(data=x_test_galactic)
-#
-# index = np.argmin(scores)
-# print('Best score for extra galactic:', np.min(scores))
-# best_clfs_galactic = clfs[index]
-# print(best_clfs_galactic[1].get_params())
-#
-# # MAKE PREDICTIONS
-# preds = None
-# for clf in clfs:
-#     if preds is None:
-#         preds = clf.predict_proba(x_test_galactic[x_train_extragalactic.columns]) /len(best_clfs_galactic)
-#     else:
-#         preds += clf.predict_proba(x_test_galactic[x_train_extragalactic.columns]) / len(best_clfs_galactic)
-#
-# y_pred_labels = []
-# for i in range(preds.shape[0]):
-#     y_pred_labels.append(np.argmax(preds[i]))
-#
-# # Compute confusion matrix
-# cnf_matrix = confusion_matrix(y_test_galactic, y_pred_labels)
-# np.set_printoptions(precision=5)
-# class_names = np.array(['6', '16', '53', '65', '92'])
-# # Plot non-normalized confusion matrix
-# plt.figure()
-# plot_confusion_matrix(cnf_matrix, classes=class_names, normalize=True,
-#                       title='Confusion matrix, Galactic')
-# plt.show()
+        }
+    this_clf, this_score = lgbm_modeling_cross_validation(params, x_train_galactic, y_train_galactic.ix[:, 0],
+                                                          nr_fold=5, random_state=1)
+    clfs_galactic.append(this_clf)
+    scores.append(this_score)
+
+x_test_galactic = scaler_galactic.transform(x_test_galactic)
+x_test_galactic = pd.DataFrame(data=x_test_galactic)
+
+index = np.argmin(scores)
+print('Best score for extra galactic:', np.min(scores))
+best_clfs_galactic = clfs_galactic[index]
+print(best_clfs_galactic[1].get_params())
+
+# MAKE PREDICTIONS
+preds = None
+for clf in best_clfs_galactic:
+    if preds is None:
+        preds = clf.predict_proba(x_test_galactic[x_train_galactic.columns]) /len(best_clfs_galactic)
+    else:
+        preds += clf.predict_proba(x_test_galactic[x_train_galactic.columns]) / len(best_clfs_galactic)
+
+y_pred_labels = []
+for i in range(preds.shape[0]):
+    y_pred_labels.append(np.argmax(preds[i]))
+
+# Compute confusion matrix
+cnf_matrix = confusion_matrix(y_test_galactic, y_pred_labels)
+np.set_printoptions(precision=5)
+class_names = np.array(['6', '16', '53', '65', '92'])
+# Plot non-normalized confusion matrix
+plt.figure()
+plot_confusion_matrix(cnf_matrix, classes=class_names, normalize=True,
+                      title='Confusion matrix, Galactic')
+plt.show()
+
+
+
+
+
+
+
+
+
 
 # train one model for galactic and extragalactic objects
 
