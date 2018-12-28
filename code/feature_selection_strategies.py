@@ -1,4 +1,19 @@
-#Fonte: https://towardsdatascience.com/a-feature-selection-tool-for-machine-learning-in-python-b64dd23710f0
+# %% 
+'''
+Pickles que quero extrair com este ficheiro
+wavelets_features_all_decomps_no_nans_variance_correlation_feature_importance60 - feito
+wavelets_features_all_decomps_no_nans_variance_correlation_pca60 - feito
+
+wavelets_features_details_decomps_no_nans_variance_correlation_feature_importance60 
+wavelets_features_details_decomps_no_nans_variance_correlation_pca60 
+
+gp_wavelets_features_all_decomps_no_nans_variance_correlation_feature_importance60 
+gp_wavelets_features_all_decomps_no_nans_variance_correlation_pca60 
+
+gp_wavelets_features_details_decomps_no_nans_variance_correlation_feature_importance60 
+gp_wavelets_features_details_decomps_no_nans_variance_correlation_pca60 
+'''
+# %% Fonte: https://towardsdatascience.com/a-feature-selection-tool-for-machine-learning-in-python-b64dd23710f0
 # %%
 import pickle
 import pywt
@@ -32,7 +47,7 @@ import warnings
 warnings.simplefilter('ignore')
 # %% SELECT FINAL FEATURE SELECTION STRATEGIE
 #FS_final_strategie='pca'
-FS_final_strategie='feature_importance'
+FS_final_strategie='pca'
 # %%
 with open(r'C:\Users\maria\Desktop\plasticc-kit-master\wavelets_features_all_decomps.pickle', 'rb') as handle:
     feature_matrix=pickle.load(handle)
@@ -131,14 +146,5 @@ elif FS_final_strategie=='pca':
     final_feature_matrix=pca.fit_transform(train_removed)
 
 # %% PICKLE DUMPS
-with open(r'wavelets_features_all_decomps_no_nans_variance_correlation_feature_importance60.pickle', 'wb') as handle:
-    pickle.dump(final_feature_matrix,handle,protocol=pickle.HIGHEST_PROTOCOL)            
-
-
-
-
-
-
-
-
-   
+with open(r'wavelets_features_all_decomps_no_nans_variance_correlation_pca60.pickle', 'wb') as handle:
+    pickle.dump(final_feature_matrix,handle,protocol=pickle.HIGHEST_PROTOCOL) 
