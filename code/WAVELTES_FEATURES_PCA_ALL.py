@@ -1,12 +1,8 @@
 '''
-Ficheiros que obtemos com este código:
-wavelets_features_all_decomps -> feito
-wavelets_features_details_decomps ->   feito
-
-wavelets_features_all_decomps_no_nans_pca -> feito
-wavelets_features_details_decomps_no_nans_pca -> feito
+This script decomposes th data using the wavelet transform and extract features upon its resulr
 '''
 # %%
+#Importing libraries
 import pickle
 import pywt
 import os
@@ -37,27 +33,25 @@ from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import (RBF, Matern, RationalQuadratic, ConstantKernel, WhiteKernel)
 import warnings
 warnings.simplefilter('ignore')
-
 # %%
-#Leitura dos dados
+'''Reading the data'''
 filename='C:/Users/maria/Desktop/plasticc-kit-master/data/training_set.csv'
 training_data = Table.read(filename, format='ascii.csv')
 
-#Leitura dos metadados
+'''Reading the metadata'''
 filename='C:/Users/maria/Desktop/plasticc-kit-master/data/training_set_metadata.csv'
 meta_training = Table.read(filename, format='ascii.csv')
 nobjects = len(meta_training)
 
-
-#Dict das bandas passantes
+'''Building a dictionary of the light bands'''
 pbmap = OrderedDict([(0,'u'), (1,'g'), (2,'r'), (3,'i'), (4, 'z'), (5, 'y')])
 
-#Associação de cada banda a uma cor, dará jeito no futuro para plots
+'''Associating each light band with a color, to facilitate plots later on'''
 pbcols = OrderedDict([(0,'blueviolet'), (1,'green'), (2,'red'),\
                       (3,'orange'), (4, 'black'), (5, 'brown')])
-
 pbnames = list(pbmap.values())
 # %%
+'''List of the features which will be extracted using Cesium'''
 features_to_use = ["all_times_nhist_numpeaks",
                   "all_times_nhist_peak1_bin",
                   "all_times_nhist_peak2_bin",
@@ -171,10 +165,10 @@ features_to_use = ["all_times_nhist_numpeaks",
                   "p2p_ssqr_diff_over_var",
                   "scatter_res_raw"]
 # %%
+feature_matrix=OrderedDict() #variable which will contain the feature matrix
 
-feature_matrix=OrderedDict()
-wavelet_decomp=OrderedDict()
-w = pywt.Wavelet('sym2')
+wavelet_decomp=OrderedDict() #variable which will contain the wavelet decomposition
+w = pywt.Wavelet('sym2') #inicialization of the selected wavelet
 
 for i in tnrange(nobjects, desc='Building Timeseries'):
           times=[]
@@ -195,7 +189,8 @@ for i in tnrange(nobjects, desc='Building Timeseries'):
           t = [thislc['mjd'][mask].data for mask in pbind ]# t = tempo
           measures = [thislc['flux'][mask].data for mask in pbind ] # m = measurement
           e = [thislc['flux_err'][mask].data for mask in pbind ]
-                  
+          
+          
           max_len=100        
           for ind in range(0,6): 
               while len(measures[ind])!=max_len:
@@ -203,7 +198,7 @@ for i in tnrange(nobjects, desc='Building Timeseries'):
 
           coef_list_for_obj=np.zeros([1,max_len])
                   
-          wavelet_decomp[thisid]=[pywt.swt(m, w, level=2) for m in measures]
+          wavelet_decomp[thisid]=[pywt.swt(m, w, level=2) for m in measures] #wavelet decomposition
           current_wavelet_decom=wavelet_decomp[thisid]    
           for a in range (0,6):
               this_band=current_wavelet_decom[a]
@@ -216,50 +211,12 @@ for i in tnrange(nobjects, desc='Building Timeseries'):
               coef_list_for_band=np.vstack((l1_detail,l2_detail))
               coef_list_for_obj=np.vstack((coef_list_for_obj,coef_list_for_band))
           coef_list_for_obj=coef_list_for_obj[1:,:]
+          
+          #Extracting features from the set of bands resulting from the wavelet decomposition
           feature_matrix[i] = featurize.featurize_time_series(times=None, values=coef_list_for_obj,  features_to_use=features_to_use, meta_features=None)              
 
 # %%
-
+#Saving the features into a pickle file
 with open(r'wavelets_features_details_decomps.pickle', 'wb') as handle:
     pickle.dump(feature_matrix,handle,protocol=pickle.HIGHEST_PROTOCOL)  
 
-# %%     
-
-with open(r'C:\Users\maria\Desktop\plasticc-kit-master\wavelets_features_details_decomps.pickle', 'rb') as handle:
-    feature_matrix=pickle.load(handle)
-
-
-#Removing nans and infs
-feature_matrix_without_nans=OrderedDict()
-for i in range(0,7848):
-    print(i)
-    df=feature_matrix[i]
-    df=df.replace([np.inf, -np.inf], np.nan)
-    df=df.dropna(axis='columns')
-    feature_matrix_without_nans[i]=df
-
-#Getting final features
-
-#Step 1: getting the columns in common
-df=feature_matrix_without_nans[0]    
-col_list=df.columns    
-for i in range(1,7848):    
-    print(i)
-    df=feature_matrix_without_nans[i]  
-    col_list=set(col_list) & set(df.columns)
-      
-#Getting feature matrix ready for pca
-feature_matrix_for_pca=np.zeros([7848,len(col_list)])
-col_list=list(col_list)
-for i in range(0,7848): 
-    print(i)
-    df=feature_matrix_without_nans[i]  
-    #for ind in range (0,len(col_list)):
-    feature_matrix_for_pca[i,:]=df[col_list].values
-
-# %%
-pca = PCA(n_components=60, svd_solver='full')        
-new_features=pca.fit_transform(feature_matrix_for_pca)
-
-with open(r'wavelets_features_details_decomps_no_nans_pca.pickle', 'wb') as handle:
-    pickle.dump(new_features,handle,protocol=pickle.HIGHEST_PROTOCOL)  
